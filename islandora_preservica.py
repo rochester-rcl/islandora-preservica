@@ -19,6 +19,7 @@ from os.path import basename
 # Assumes that preservation assets are coming from Digital Scholarship
 # Assumes that metadata is coming from Islandora
 #------------------------------------------------------------------------------------------------------------------------------------------------------
+#   ----manual process---------------------------------------------------------------------------------------------------------------------------------
 # X create_container() - Reanme 'ds_files' directory into container directory which will be dumped into WinSCP for OPEX incremental ingest
 # X Manual Process - COPY preservations masters directory into root of project folder
 # X folder_ds_files() - Transform single directory of preservation images into separate subdirectories full of images per asset
@@ -27,18 +28,20 @@ from os.path import basename
 # X extract_bags() - Extract/unzip the bags in the bags directory
 # X validate_bags() - Validate the unzipped bags to ensure no errors in transfer
 # X create_id_ss() - Create a spreadsheet with the mapping between preservation file names, access file names, and bag ids
+# X Manual Process - Rectify the mismatches presented in the pres_acc_bag_ids spreadsheet
+#   ----can be run in sequnce--------------------------------------------------------------------------------------------------------------------------
 # X representation_preservation() - Create 'Representation_Preservation' subdirectories in each asset folder, then move preservation assets into them
 # X process_bags() - Reverts the bags into simple directories and removes unnecessary files in 'data' subdirectory
-# X representation_access() - Create 'Representation_Access' subcirectories in each asset folder
+# X representation_access() - Create 'Representation_Access' subdirectories in each asset folder
 # X access_id_path() - Generate file containing MODS identifier and relative paths
 # X merge_access_preservation() - Loop through dirs in container, move access copies and metadata into relevant folders
 # X cleanup_bags() - Delete the bags_dir folder and the access_ids.txt file once merge is complete
 # X pax_metadata() - Write the OPEX metadata for the individua assets contained in the PAX
 # X stage_pax_content() - moves the Representation_Access and Representation_Preservation folders into a staging directory to enable zipping the PAX
-# create_pax() - Make a PAX zip archive out of the Representation_Access and Representation_Access
-# cleanup_directories() - Delete the xml files used to create the OPEX metadata and the directories used to create the PAX zip archive
-# ao_opex_metadata() - Create the OPEX metadata for the archival object folder that syncs with ArchivesSpace, and rename subdirectories
-# write_opex_container_md() - Write the OPEX metadata for the entire container structure
+# X create_pax() - Make a PAX zip archive out of the Representation_Access and Representation_Access
+# X cleanup_directories() - Delete the xml files used to create the OPEX metadata and the directories used to create the PAX zip archive
+# X ao_opex_metadata() - Create the OPEX metadata for the archival object folder that syncs with ArchivesSpace, and rename subdirectories
+# X write_opex_container_md() - Write the OPEX metadata for the entire container structure
 #------------------------------------------------------------------------------------------------------------------------------------------------------
 # Project Log File variables by index
 # 0 - date_time
@@ -47,7 +50,6 @@ from os.path import basename
 #------------------------------------------------------------------------------------------------------------------------------------------------------
 
 proj_path = 'M:/IDT/DAM/McGraw_Preservica_Ingest'
-
 #copy folder name provided by DS into *ds_files* variable
 #ds_files is child of preservica_ingest, top level folder
 ds_files = 'preservation_masters'
@@ -435,7 +437,7 @@ def create_pax():
         pax_obj.close()
         os.rename(proj_path + '/' + container + '/' + directory + '/' + directory + '.zip', proj_path + '/' + container + '/' + directory + '/' + directory + '.pax.zip')
         dir_count += 1
-        zip_file = directory + '.pax.zip'
+        zip_file = dir_count + ': ' + directory + '.pax.zip'
         print('created {}'.format(zip_file))
     print('Created {} PAX archives for ingest'.format(dir_count))
 
@@ -456,9 +458,11 @@ def cleanup_directories():
             elif entity.endswith('.xml') == True:
                 os.remove(proj_path + '/' + container + '/' + directory + '/' + entity)
                 file_count += 1
+                print('removed metadata file')
             elif os.path.isdir(proj_path + '/' + container + '/' + directory + '/' + entity) == True:
                 shutil.rmtree(proj_path + '/' + container + '/' + directory + '/' + entity)
                 dir_count += 1
+                print('removed pax_stage directory')
             else:
                 print('***UNEXPECTED ENTITY: ' + entity)
                 unexpected += 1
@@ -471,12 +475,15 @@ def ao_opex_metadata():
     vars = project_log_hand.readlines()
     container = vars[1]
     container = container.strip()
+    project_log_hand.close()
     file_count = 0
     id_hand = open(proj_path + '/' + 'mcgraw_aonum_islid.txt', 'r')
     id_list = id_hand.readlines()
+    id_hand.close()
     for directory in os.listdir(path = proj_path + '/' + container):
         opex_hand = open(proj_path + '/' + container + '/' + directory + '/' + directory + '.pax.zip.opex', 'r')
         opex_str = opex_hand.read()
+        opex_hand.close()
         ao_num = ''
         for line in id_list:
             ids = line.split('|')
@@ -486,16 +493,14 @@ def ao_opex_metadata():
             isnum = isnum.strip()
             if opex_str.find(isnum) != -1:
                 ao_num = aonum
-        ao_md_hand = open(proj_path + '/' + container + '/' + directory + '/' + directory + '.opex', 'a')
+                print('found a match for {} and {}'.format(aonum, isnum))
         opex = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><opex:OPEXMetadata xmlns:opex="http://www.openpreservationexchange.org/opex/v1.0"><opex:Properties><opex:Title>' + ao_num + '</opex:Title><opex:Identifiers><opex:Identifier type="code">' + ao_num + '</opex:Identifier></opex:Identifiers></opex:Properties><opex:DescriptiveMetadata><LegacyXIP xmlns="http://preservica.com/LegacyXIP"><Virtual>false</Virtual></LegacyXIP></opex:DescriptiveMetadata></opex:OPEXMetadata>'
+        ao_md_hand = open(proj_path + '/' + container + '/' + directory + '/' + ao_num + '.opex', 'a')
         ao_md_hand.write(opex)
         ao_md_hand.close()
         os.rename(proj_path + '/' + container + '/' + directory, proj_path + '/' + container + '/' + ao_num)
         file_count += 1
-        opex_hand.close()
     print('Created {} archival object metadata files'.format(file_count))
-    project_log_hand.close()
-    id_hand.close()
 
 def write_opex_container_md():
     project_log_hand = open(proj_path + '/' + 'project_log.txt', 'r')
