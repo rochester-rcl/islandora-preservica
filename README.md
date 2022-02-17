@@ -2,7 +2,7 @@
 A set of functions written in Python to modify exported assets from Islandora as bags using Islandora BagIt into assets ready for Preservica ingest using OPEX incremental ingest and the PAX structure
 
 Islandora version 7.x-1.13
-Requireds Islandora BagIt for export of bags from Islandora
+Requires Islandora BagIt for export of bags from Islandora
 
 Preservica Cloud Edition used for ingest of assets
 Workflow for ingest is OPEX Incremental using WinSCP
