@@ -55,6 +55,8 @@ orig_dir = 'preservation_masters'
 proj_path = 'M:/IDT/DAM/Perkins-Gillman_Ingest'
 proj_log_file = os.path.join(proj_path, 'project_log.txt')
 
+#this function takes the folder containing all the preservation masters and renames to be the "container" folder which will ultimately be used for OPEX incremental ingest
+#also creates a "project_log.txt" file to store variables so that an ingest project can be worked on over multiple sessions
 def create_container():
     project_log_hand = open(proj_log_file, 'a')
     now = datetime.now()
@@ -66,7 +68,8 @@ def create_container():
     print('Container directory: {}'.format(container))
     project_log_hand.close()
 
-#The exported bags from Islandora had two digit sequence numbers (instead of the correct three) hence the modification here
+#this function takes all of the preservation master files that come from DS in one big directory and splits them up into subdirectories containing all the images for a
+#particular resource
 def folder_ds_files():
     project_log_hand = open(proj_log_file, 'r')
     vars = project_log_hand.readlines()
@@ -111,6 +114,7 @@ def folder_ds_files():
             print('{} created'.format(folder_name))
     print('Created and renamed {} subdirectories and moved {} files into them'.format(folder_count, file_count))
 
+#this function creates a subdir in "container" to hold all the bags exported from Islandora, and manipulate them separate from the preservation masters
 def create_bags_dir():
     project_log_hand = open(proj_log_file, 'r')
     vars = project_log_hand.readlines()
@@ -124,6 +128,7 @@ def create_bags_dir():
     print('Created bags directory: {}'.format(bags_dir))
     project_log_hand.close()
 
+#this function extracts the zipped bags into unzipped bags, and then deletes the zipped bags
 def extract_bags():
     project_log_hand = open(proj_log_file, 'r')
     vars = project_log_hand.readlines()
@@ -144,6 +149,8 @@ def extract_bags():
     print('Extracted {} bags'.format(str(num_bags)))
     project_log_hand.close()
 
+#this function validates the bags to ensure the checksums don't indicate any corruption of files and checks for any other types of erros
+#also logs the errors to a "validation_error_log.txt" for a record of problems which is also used in a later function
 def validate_bags():
     project_log_hand = open(proj_log_file, 'r')
     vars = project_log_hand.readlines()
@@ -168,6 +175,8 @@ def validate_bags():
     print('Validated {} bags'.format(str(num_bags)))
     error_log_handle.close()
 
+#this function creates an Excel spreadsheet that attemtps to match preservation assets and access assets up to each other
+#will likely uncover preservation assets with no access corrolaries and vice versa which will require manual rectification
 def create_id_ss():
     wb = Workbook()
     ws = wb.active
@@ -206,6 +215,8 @@ def create_id_ss():
 
 #------------------------------------------------------------------------------------------------------------------------
 
+#this function begins the process of creating the PAX structure necessary for ingest
+#"Representation_Preservation" folder is created, and each image is given a separate subdir inside of it
 def representation_preservation():
     print('----CREATING REPRESENTATION_PRESERVATION FOLDERS AND MOVING ASSETS INTO THEM----')
     project_log_hand = open(proj_log_file, 'r')
@@ -236,6 +247,9 @@ def representation_preservation():
             file_count += 1
     print('Created {} Representation_Preservation directories | Moved {} files into created directories'.format(folder_count, file_count))
 
+#this function processes the access assets and metadata contained within the Islandora bags and reverts the bag into a simple directory without the bag manifests
+#the function renames the access asset by checking the MODS record and pulling the title field
+#this function removes many unnecessary files provided by Islandora during bag export, ultimately leaving the access asset and any metadata files
 def process_bags():
     print('----PROCESSING BAGS----')
     project_log_hand = open(proj_log_file, 'r')
@@ -281,6 +295,7 @@ def process_bags():
         num_bags += 1
     print('Processed {} bags'.format(str(num_bags)))
 
+#this function continues to create the PAX structure by creating a "Representation_Access" folder and creating individual subdirs for all access assets in it
 def representation_access():
     print('----CREATING REPRESENTATION_ACCESS FOLDERS----')
     project_log_hand = open(proj_log_file, 'r')
@@ -300,6 +315,8 @@ def representation_access():
         folder_count += 1
     print('Created {} Representation_Access directories'.format(folder_count))
 
+#this function creates an "access_ids.txt" file to store an identifier pulled from the MODS record as well as the path to the access assets in "bags_dir"
+#this will then allow the access assets to be merged into the "container" folder in their "Representation_Access" subdirectories
 def access_id_path():
     print('----CREATING LOG OF IDENTIFIERS AND FILE PATHS----')
     project_log_hand = open(proj_log_file, 'r')
@@ -321,6 +338,8 @@ def access_id_path():
     print('Logged {} paths and identifiers in access_ids.txt'.format(access_count))
     access_id_hand.close()
 
+#this function loops through each subdir inside "container" and in each loop then loops through the entirety of "access_ids.txt" looking for a match
+#between the MODS identifier recorded and checking to see if it matches the subdir name. If it does, it moved the access assets and metadata over
 def merge_access_preservation():
     print('----MERGING ACCESS AND PRESERVATION ASSETS----')
     project_log_hand = open(proj_log_file, 'r')
@@ -355,6 +374,7 @@ def merge_access_preservation():
                             file_count += 1
     print('Moved {} access and metadata files'.format(file_count))
 
+#this funciton simply removes the "bags_dir" folder path as well as deleting the "access_ids.txt" file
 def cleanup_bags():
     print('----CLEANING UP BAGS----')
     project_log_hand = open(proj_log_file, 'r')
@@ -366,6 +386,9 @@ def cleanup_bags():
     os.remove('access_ids.txt')
     print('Deleted "{}" directory and access_ids.txt'.format(bags_dir))
 
+#this function creates the OPEX metadata file that accompanies an individual zipped PAX package
+#this includes all the identifiers from the DC metadata file as well as the full MODS and DC records themselves
+#this function also includes the metadata necessary for ArchivesSpace sync to Preservica
 def pax_metadata():
     print('---CREATING METADATA FILES FOR PAX OBJECTS----')
     project_log_hand = open(proj_log_file, 'r')
@@ -414,6 +437,8 @@ def pax_metadata():
             print('ERROR: {}'.format(directory))
     print('Created {} OPEX metdata files for individual assets'.format(dir_count))
 
+#this function stages the "Representation_Access" and "Representation_Preservation" folders for each asset inside a new directory
+#this facilitates the creation of the zipped PAX package in the following function
 def stage_pax_content():
     print('----STAGING PAX CONTENT IN PAX_STAGE----')
     project_log_hand = open(proj_log_file, 'r')
@@ -434,6 +459,8 @@ def stage_pax_content():
         print('created /pax_stage in {}'.format(directory))
     print('Created {} pax_stage subdirectories and staged {} representation subdirectories'.format(pax_count, rep_count))
 
+#this function takes the contents of the "pax_stage" folder created in the previous function and writes them into a zip archive
+#the zip archive is the PAX object that will eventually become an Asset in Preservica
 def create_pax():
     print('----CREATING PAX ZIP ARCHIVES----')
     project_log_hand = open(proj_log_file, 'r')
@@ -455,6 +482,9 @@ def create_pax():
         print('created {}'.format(str(dir_count) + ': ' + directory + '.pax.zip'))
     print('Created {} PAX archives for ingest'.format(dir_count))
 
+#this function deletes many files and folders that have now served their purpose in the migration process
+#all metadata files are deleted as well as the "pax_stage" folder and it's contents
+#a warning is thrown up and directory and file name information written to "project_log.txt" if an unexpected file is discovered
 def cleanup_directories():
     print('----REMOVING UNNECESSARY FILES----')
     project_log_hand = open(proj_log_file, 'r')
@@ -490,6 +520,10 @@ def cleanup_directories():
     print('Found {} unexpected entities'.format(unexpected))
     project_log_hand.close()
 
+#this function loops through ever directory in "container" and opens up the OPEX metadata for the asset storing the entire contents in a string variable
+#then the function loops through a text file that was manually created, containing the call number identifier as well as the ArchivesSpace archival object number
+#while looping through the text file, if a match is found the OPEX metadata string variable, a metadata file is created for the folder
+#this metadata is another facet required for ArchivesSpace to Preservica synchronization
 def ao_opex_metadata():
     print('----CREATE ARCHIVAL OBJECT OPEX METADATA----')
     project_log_hand = open(proj_log_file, 'r')
@@ -525,9 +559,11 @@ def ao_opex_metadata():
                 os.rename(path_directory, os.path.join(proj_path, container, ao_num))
                 file_count += 1
             except:
-                continue
+                print('error: {}'.format(directory))
     print('Created {} archival object metadata files'.format(file_count))
 
+#this function creates the last OPEX metadata file required for the OPEX incremental ingest, for the container folder
+#this OPEX file has the folder manifest to ensure that content is ingested properly
 def write_opex_container_md():
     print('----CREATE CONTAINER OBJECT OPEX METADATA----')
     project_log_hand = open(proj_log_file, 'r')
