@@ -322,6 +322,7 @@ def revert_bags():
     vars = project_log_hand.readlines()
     project_log_hand.close()
     container = vars[1].strip()
+    bags_dir = vars[2].strip()
     num_bags = 0
     error_log_handle = open(os.path.join(proj_path, 'validation_error_log.txt'), 'r')
     error_log = error_log_handle.read()
@@ -329,9 +330,9 @@ def revert_bags():
     error_log_str = ''
     for line in error_log:
         error_log_str = error_log_str + line
-    path_bagsdir = os.path.join(proj_path, container)
+    path_bagsdir = os.path.join(proj_path, container, bags_dir)
     for directory in os.listdir(path = path_bagsdir):
-        path_bagsdirdirectory = os.path.join(proj_path, container, directory)
+        path_bagsdirdirectory = os.path.join(proj_path, container, bags_dir, directory)
         #skips any directories that raised errors during validation
         if error_log_str.find(directory) != -1 :
             continue
