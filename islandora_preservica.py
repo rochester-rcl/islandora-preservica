@@ -164,7 +164,7 @@ def validate_bags():
     path_bagsdir = os.path.join(proj_path, container, bags_dir)
     for directory in os.listdir(path = path_bagsdir):
         path_directory = os.path.join(proj_path, container, bags_dir, directory)
-        print('attempting to validate {}'.format(directory))
+        print('attempting to validate bag: {}'.format(directory))
         num_bags += 1
         try:
             bdbag_api.validate_bag(path_directory, fast = False)
