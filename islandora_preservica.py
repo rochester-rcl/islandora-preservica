@@ -200,7 +200,7 @@ def create_id_ss():
             pres_file_list.append(folder)
     bag_dict = dict()
     for bag in os.listdir(path =  path_bagsdir):
-        path_bagmd = os.path.join(proj_path, container, bags_dir, bag, 'data', 'MODS.xml')
+        path_bagmd = os.path.join(proj_path, container, bags_dir, bag, 'MODS.xml')
         tree = ET.parse(path_bagmd)
         identifier = tree.find('{http://www.loc.gov/mods/v3}identifier').text
         bag_dict[identifier] = bag
