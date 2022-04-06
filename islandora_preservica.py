@@ -123,7 +123,7 @@ def create_bags_dir():
     date_time = vars[0].strip()
     container = vars[1].strip()
     bags_dir = 'bags_' + date_time
-    os.mkdir(proj_path + '/' + container + '/' + bags_dir)
+    os.mkdir(os.path.join(proj_path, container, bags_dir))
     project_log_hand.close()
     project_log_hand = open(proj_log_file, 'a')
     project_log_hand.write(bags_dir + '\n')
