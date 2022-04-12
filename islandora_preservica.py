@@ -512,7 +512,7 @@ def cleanup_directories():
                 os.remove(path_entity)
                 file_count += 1
                 print('removed metadata file')
-            elif os.path.isdir(path_entity) == True:
+            elif entity == 'pax_stage':
                 shutil.rmtree(path_entity)
                 dir_count += 1
                 print('removed pax_stage directory')
