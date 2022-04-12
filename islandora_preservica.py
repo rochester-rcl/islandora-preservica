@@ -450,6 +450,7 @@ def pax_metadata():
             pax_read = pax_hand.read()
             sha1_checksum = hashlib.sha1(pax_read).hexdigest()
             opex1 = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><opex:OPEXMetadata xmlns:opex="http://www.openpreservationexchange.org/opex/v1.0"><opex:Transfer><opex:Fixities><opex:Fixity type="SHA-1" value="' + sha1_checksum + '"/></opex:Fixities></opex:Transfer><opex:Properties><opex:Title>'
+            pax_hand.close()
             tree = ET.parse(os.path.join(path_directory, 'DC.xml'))
             root = tree.getroot()
             opex2 = tree.find('{http://purl.org/dc/elements/1.1/}title').text
