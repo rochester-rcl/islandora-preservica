@@ -5,7 +5,7 @@ Islandora version 7.x-1.13
 Requires Islandora BagIt for export of bags from Islandora
 
 Preservica Cloud Edition used for ingest of assets
-Workflow for ingest is OPEX Incremental using WinSCP
+Workflow for ingest is OPEX Incremental transferring using WinSCP
 Structure for assets is PAX
 
 Python library used for bag manipulation:
