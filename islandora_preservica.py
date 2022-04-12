@@ -472,8 +472,7 @@ def pax_metadata():
             for file in os.listdir(path = path_directory):
                 if file.endswith('.xml'):
                     temp_file_hand = open(os.path.join(path_directory, file), 'r')
-                    metadata = temp_file_hand.read()
-                    metadata = metadata.strip()
+                    metadata = temp_file_hand.read().strip()
                     opex6 += metadata + '\n'
                     temp_file_hand.close()
             opex7 = '</opex:DescriptiveMetadata></opex:OPEXMetadata>'
