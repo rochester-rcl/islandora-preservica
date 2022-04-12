@@ -622,7 +622,7 @@ def write_opex_container_md():
 # cleanup_bags()
 ## stage_pax_content() - moves the Representation_Access and Representation_Preservation folders into a staging directory to enable zipping the PAX
 # stage_pax_content()
-## create_pax() - Make a PAX zip archive out of the Representation_Access and Representation_Access
+## create_pax() - Make a PAX zip archive out of the Representation_Access and Representation_Preservation
 # create_pax()
 ## pax_metadata() - Write the OPEX metadata for the individua assets contained in the PAX
 # pax_metadata()
