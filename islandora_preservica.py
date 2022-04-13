@@ -592,7 +592,7 @@ def write_opex_container_md():
 # Assumes that metadata is coming from Islandora
 #------------------------------------------------------------------------------------------------------------------------------------------------------
 ## Manual Process - COPY preservations masters directory into root of project folder
-## create_container() - Reanme 'ds_files' directory into container directory which will be dumped into WinSCP for OPEX incremental ingest
+## create_container() - Rename 'orig_dir' directory into container directory which will be dumped into AWS Bucket for OPEX incremental ingest
 # create_container()
 ## folder_ds_files() - Transform single directory of preservation images into separate subdirectories full of images per asset
 # folder_ds_files()
@@ -806,7 +806,7 @@ def representation_preservation_access():
 # Assumes that metadata is coming from Islandora
 #------------------------------------------------------------------------------------------------------------------------------------------------------
 ## X Manual Process - COPY preservations masters directory into root of project folder
-## X create_container() - Reanme 'orig_dir' directory into container directory which will be dumped into WinSCP for OPEX incremental ingest
+## X create_container() - Reanme 'orig_dir' directory into container directory which will be dumped into AWS Bucket for OPEX incremental ingest
 # create_container()
 ## X Manual Process - COPY zipped bags over into created container directory
 ## X extract_bags() - Extract/unzip the bags in the bags directory
