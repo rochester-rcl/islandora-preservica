@@ -32,6 +32,7 @@ proj_log_file = os.path.join(proj_path, 'project_log.txt')
 #this function takes the folder containing all the preservation masters and renames to be the "container" folder which will ultimately be used for OPEX incremental ingest
 #also creates a "project_log.txt" file to store variables so that an ingest project can be worked on over multiple sessions
 def create_container():
+    print('----CREATING CONTAINER----')
     project_log_hand = open(proj_log_file, 'a')
     now = datetime.now()
     date_time = now.strftime('%Y-%m-%d_%H-%M-%S')
@@ -45,6 +46,7 @@ def create_container():
 #this function takes all of the preservation master files that come from DS in one big directory and splits them up into subdirectories containing all the images for a
 #particular resource
 def folder_ds_files():
+    print('----CREATING FOLDER STRUCTURE FOR PRESERVATION MASTERS----')
     project_log_hand = open(proj_log_file, 'r')
     vars = project_log_hand.readlines()
     project_log_hand.close()
@@ -90,6 +92,7 @@ def folder_ds_files():
 
 #this function creates a subdir in "container" to hold all the bags exported from Islandora, and manipulate them separate from the preservation masters
 def create_bags_dir():
+    print('----CREATING BAGS SUBDIRECTORY----')
     project_log_hand = open(proj_log_file, 'r')
     vars = project_log_hand.readlines()
     date_time = vars[0].strip()
@@ -104,6 +107,7 @@ def create_bags_dir():
 
 #this function extracts the zipped bags into unzipped bags, and then deletes the zipped bags
 def extract_bags():
+    print('----EXTRACTING BAGS----')
     project_log_hand = open(proj_log_file, 'r')
     vars = project_log_hand.readlines()
     container = vars[1].strip()
@@ -126,6 +130,7 @@ def extract_bags():
 #this function validates the bags to ensure the checksums don't indicate any corruption of files and checks for any other types of erros
 #also logs the errors to a "validation_error_log.txt" for a record of problems which is also used in a later function
 def validate_bags():
+    print('----VALIDATING BAGS----')
     project_log_hand = open(proj_log_file, 'r')
     vars = project_log_hand.readlines()
     project_log_hand.close()
@@ -152,6 +157,7 @@ def validate_bags():
 #this function creates an Excel spreadsheet that attemtps to match preservation assets and access assets up to each other
 #will likely uncover preservation assets with no access corrolaries and vice versa which will require manual rectification
 def create_id_ss():
+    print('----CREATING ASSET CROSSWALK SPREADSHEET----')
     wb = Workbook()
     ws = wb.active
     project_log_hand = open(proj_log_file, 'r')
@@ -842,6 +848,7 @@ def representation_preservation_access():
 #this function takes all of the preservation master files that come from DS in one big directory and splits them up into subdirectories containing all the images for a
 #particular resource
 def folder_ds_files_alt1():
+    print('----CREATING FOLDER STRUCTURE FOR PRESERVATION MASTERS----')
     project_log_hand = open(proj_log_file, 'r')
     vars = project_log_hand.readlines()
     project_log_hand.close()
