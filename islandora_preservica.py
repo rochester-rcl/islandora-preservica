@@ -524,7 +524,7 @@ def cleanup_directories():
                 print('removed pax_stage directory')
             else:
                 print('***UNEXPECTED ENTITY: ' + entity)
-                project_log_hand.write('Unexpected entity in cleanup_directories(): ',directory,' | ',entity)
+                project_log_hand.write('Unexpected entity in cleanup_directories(): ',directory,' | ',entity,'\n')
                 unexpected += 1
     print('Deleted {} metadata files and {} Representation_Preservation and Representation_Access folders'.format(file_count, dir_count))
     print('Found {} unexpected entities'.format(unexpected))
