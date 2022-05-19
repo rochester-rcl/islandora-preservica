@@ -386,6 +386,29 @@ def stage_pax_content():
         print('created /pax_stage in {}'.format(directory))
     print('Created {} pax_stage subdirectories and staged {} representation subdirectories'.format(pax_count, rep_count))
 
+#this function takes the contents of the "pax_stage" folder created in the previous function and writes them into a zip archive
+#the zip archive is the PAX object that will eventually become an Asset in Preservica
+def create_pax():
+    print('----CREATING PAX ZIP ARCHIVES----')
+    project_log_hand = open(proj_log_file, 'r')
+    vars = project_log_hand.readlines()
+    container = vars[1].strip()
+    project_log_hand.close()
+    dir_count = 0
+    path_container = os.path.join(proj_path, container)
+    for directory in os.listdir(path = path_container):
+        path_zipdir = os.path.join(proj_path, container, directory, 'pax_stage/')
+        path_directory = os.path.join(proj_path, container, directory)
+        zip_dir = pathlib.Path(path_zipdir)
+        pax_obj = ZipFile(os.path.join(path_directory, directory + '.zip'), 'w')
+        for file_path in zip_dir.rglob("*"):
+            pax_obj.write(file_path, arcname = file_path.relative_to(zip_dir))
+        pax_obj.close()
+        os.rename(os.path.join(path_directory, directory + '.zip'), os.path.join(path_directory, directory + '.pax.zip'))
+        dir_count += 1
+        print('created {}'.format(str(dir_count) + ': ' + directory + '.pax.zip'))
+    print('Created {} PAX archives for ingest'.format(dir_count))    
+    
 #this function uses regex to remove the XML header from any metadata files before they are merged into a single OPEX file
 #extra XML headers will cause the OPEX Incremental Workflow to fail when trying to ingest
 def cleanup_metadata():
@@ -412,30 +435,7 @@ def cleanup_metadata():
                     temp_hand.close()
                     header_count += 1
                     print('removing XML header from {} in {}'.format(file, directory))
-    print('Removed {} extra XML headers from metadata files'.format(header_count))    
-    
-#this function takes the contents of the "pax_stage" folder created in the previous function and writes them into a zip archive
-#the zip archive is the PAX object that will eventually become an Asset in Preservica
-def create_pax():
-    print('----CREATING PAX ZIP ARCHIVES----')
-    project_log_hand = open(proj_log_file, 'r')
-    vars = project_log_hand.readlines()
-    container = vars[1].strip()
-    project_log_hand.close()
-    dir_count = 0
-    path_container = os.path.join(proj_path, container)
-    for directory in os.listdir(path = path_container):
-        path_zipdir = os.path.join(proj_path, container, directory, 'pax_stage/')
-        path_directory = os.path.join(proj_path, container, directory)
-        zip_dir = pathlib.Path(path_zipdir)
-        pax_obj = ZipFile(os.path.join(path_directory, directory + '.zip'), 'w')
-        for file_path in zip_dir.rglob("*"):
-            pax_obj.write(file_path, arcname = file_path.relative_to(zip_dir))
-        pax_obj.close()
-        os.rename(os.path.join(path_directory, directory + '.zip'), os.path.join(path_directory, directory + '.pax.zip'))
-        dir_count += 1
-        print('created {}'.format(str(dir_count) + ': ' + directory + '.pax.zip'))
-    print('Created {} PAX archives for ingest'.format(dir_count))
+    print('Removed {} extra XML headers from metadata files'.format(header_count))
 
 #this function creates the OPEX metadata file that accompanies an individual zipped PAX package
 #this includes all the identifiers from the DC metadata file as well as the full MODS and DC records themselves
