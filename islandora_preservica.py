@@ -613,8 +613,6 @@ def write_opex_container_md():
 ## Manual Process - Rectify the mismatches presented in the pres_acc_bag_ids spreadsheet
 ## representation_preservation() - Create 'Representation_Preservation' subdirectories in each asset folder, then move preservation assets into them
 # representation_preservation()
-## cleanup_metadata() - Removes excess XML headers from individual metadata files
-# cleanup_metadata()
 ## process_bags() - Reverts the bags into simple directories and removes unnecessary files in 'data' subdirectory
 # process_bags()
 ## representation_access() - Create 'Representation_Access' subdirectories in each asset folder
@@ -627,6 +625,8 @@ def write_opex_container_md():
 # cleanup_bags()
 ## stage_pax_content() - moves the Representation_Access and Representation_Preservation folders into a staging directory to enable zipping the PAX
 # stage_pax_content()
+## cleanup_metadata() - Removes excess XML headers from individual metadata files
+# cleanup_metadata()
 ## create_pax() - Make a PAX zip archive out of the Representation_Access and Representation_Preservation
 # create_pax()
 ## pax_metadata() - Write the OPEX metadata for the individua assets contained in the PAX
