@@ -51,27 +51,26 @@ def folder_ds_files():
     vars = project_log_hand.readlines()
     project_log_hand.close()
     container = vars[1].strip()
-    folder_name = ''
     folder_count = 0
     file_count = 0
+    folder_name = ''
     path_container = os.path.join(proj_path, container)
-    path_foldername = os.path.join(proj_path, container, folder_name)
     for file in os.listdir(path = path_container):
+        file_root = file.split('-')[0]
         path_containerfile = os.path.join(proj_path, container, file)
-        path_foldernamefile = os.path.join(proj_path, container, folder_name, file)
-        if file.startswith('bags_'):
-            continue
+        if  file_root == folder_name:
+            path_foldername = os.path.join(proj_path, container, folder_name)
+            path_foldernamefile = os.path.join(proj_path, container, folder_name, file)
+            shutil.move(path_containerfile, path_foldernamefile)
+            file_count += 1
         else:
-            file_root = file.split('-')[0]
-            if  file_root == folder_name:
-                shutil.move(path_containerfile, path_foldernamefile)
-                file_count += 1
-            else:
-                folder_name = file_root
-                os.mkdir(path_foldername)
-                folder_count += 1
-                shutil.move(path_containerfile, path_foldernamefile)
-                file_count += 1
+            folder_name = file_root
+            path_foldername = os.path.join(proj_path, container, folder_name)
+            path_foldernamefile = os.path.join(proj_path, container, folder_name, file)
+            os.mkdir(path_foldername)
+            folder_count += 1
+            shutil.move(path_containerfile, path_foldernamefile)
+            file_count += 1
     for folder in os.listdir(path = path_container):
         path_folder = os.path.join(proj_path, container, folder)
         if folder.startswith('bags_'):
