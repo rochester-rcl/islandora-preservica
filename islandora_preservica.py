@@ -22,11 +22,11 @@ from os.path import basename
 #------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #NOTE orig_dir is folder of preservation masters, subdir of project folder
-orig_dir = 'preservation_masters'
+orig_dir = 'container'
 #Windows Project Path
-proj_path = 'M:/IDT/DAM/*PROJECT FOLDER*'
+proj_path = 'M:/IDT/DAM/McGraw_Ingest'
 #Linux Project Path
-#proj_path = '/home/jdewees/department/IDT/DAM/*PROJECT FOLDER*'
+#proj_path = '/home/jdewees/department/IDT/DAM/McGraw_Ingest'
 proj_log_file = os.path.join(proj_path, 'project_log.txt')
 
 #this function takes the folder containing all the preservation masters and renames to be the "container" folder which will ultimately be used for OPEX incremental ingest
@@ -177,7 +177,7 @@ def create_id_ss():
             pres_file_list.append(folder)
     bag_dict = dict()
     for bag in os.listdir(path =  path_bagsdir):
-        path_bagmd = os.path.join(proj_path, container, bags_dir, bag, 'MODS.xml')
+        path_bagmd = os.path.join(proj_path, container, bags_dir, bag, 'data', 'MODS.xml')
         tree = ET.parse(path_bagmd)
         identifier = tree.find('{http://www.loc.gov/mods/v3}identifier').text
         bag_dict[identifier] = bag
@@ -407,8 +407,8 @@ def create_pax():
         os.rename(os.path.join(path_directory, directory + '.zip'), os.path.join(path_directory, directory + '.pax.zip'))
         dir_count += 1
         print('created {}'.format(str(dir_count) + ': ' + directory + '.pax.zip'))
-    print('Created {} PAX archives for ingest'.format(dir_count))    
-    
+    print('Created {} PAX archives for ingest'.format(dir_count))
+
 #this function uses regex to remove the XML header from any metadata files before they are merged into a single OPEX file
 #extra XML headers will cause the OPEX Incremental Workflow to fail when trying to ingest
 def cleanup_metadata():
@@ -540,7 +540,7 @@ def ao_opex_metadata():
     container = vars[1].strip()
     project_log_hand.close()
     file_count = 0
-    id_hand = open(os.path.join(proj_path, 'perkins-gillman_aonum_islid.txt'), 'r')
+    id_hand = open(os.path.join(proj_path, 'mcgraw_aonum_islid.txt'), 'r')
     id_list = id_hand.readlines()
     id_hand.close()
     path_container = os.path.join(proj_path, container)
@@ -596,243 +596,40 @@ def write_opex_container_md():
 # Assumes that preservation assets are coming from Digital Scholarship
 # Assumes that metadata is coming from Islandora
 #------------------------------------------------------------------------------------------------------------------------------------------------------
-## Manual Process - COPY preservations masters directory into root of project folder
-## create_container() - Rename 'orig_dir' directory into container directory which will be dumped into AWS Bucket for OPEX incremental ingest
-# create_container()
-## folder_ds_files() - Transform single directory of preservation images into separate subdirectories full of images per asset
-# folder_ds_files()
-## create_bags_dir() -  Create bags directory to stage exported bags for processing
-# create_bags_dir()
-## Manual Process - COPY zipped bags over into created bags directory
-## extract_bags() - Extract/unzip the bags in the bags directory
-# extract_bags()
-## validate_bags() - Validate the unzipped bags to ensure no errors in transfer
-# validate_bags()
-## create_id_ss() - Create a spreadsheet with the mapping between preservation file names, access file names, and bag ids
-# create_id_ss()
-## Manual Process - Rectify the mismatches presented in the pres_acc_bag_ids spreadsheet
-## representation_preservation() - Create 'Representation_Preservation' subdirectories in each asset folder, then move preservation assets into them
-# representation_preservation()
-## process_bags() - Reverts the bags into simple directories and removes unnecessary files in 'data' subdirectory
-# process_bags()
-## representation_access() - Create 'Representation_Access' subdirectories in each asset folder
-# representation_access()
-## access_id_path() - Generate file containing MODS identifier and relative paths
-# access_id_path()
-## merge_access_preservation() - Loop through dirs in container, move access copies and metadata into relevant folders
-# merge_access_preservation()
-## cleanup_bags() - Delete the bags_dir folder and the access_ids.txt file once merge is complete
-# cleanup_bags()
-## stage_pax_content() - moves the Representation_Access and Representation_Preservation folders into a staging directory to enable zipping the PAX
-# stage_pax_content()
-## cleanup_metadata() - Removes excess XML headers from individual metadata files
-# cleanup_metadata()
-## create_pax() - Make a PAX zip archive out of the Representation_Access and Representation_Preservation
-# create_pax()
-## pax_metadata() - Write the OPEX metadata for the individua assets contained in the PAX
-# pax_metadata()
-## cleanup_directories() - Delete the xml files used to create the OPEX metadata and the directories used to create the PAX zip archive
-# cleanup_directories()
-## ao_opex_metadata() - Create the OPEX metadata for the archival object folder that syncs with ArchivesSpace, and rename subdirectories
-# ao_opex_metadata()
-## write_opex_container_md() - Write the OPEX metadata for the entire container structure
-# write_opex_container_md()
-#------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-#------------------------------------------------------------------------------------------------------------------------------------------------------
-# VARIANT SCRIPTS FOR USE WHERE PRESERVATION AND ACCESS ASSETS ARE ALL COMING FROM ISLANDORA
-#------------------------------------------------------------------------------------------------------------------------------------------------------
-
-# renames the bags if necessary depending on project needs
-def rename_bags():
-    print('----RENAMING BAGS----')
-    project_log_hand = open(proj_log_file, 'r')
-    vars = project_log_hand.readlines()
-    project_log_hand.close()
-    container = vars[1].strip()
-    num_bags = 0
-    path_bagsdir = os.path.join(proj_path, container)
-    for directory in os.listdir(path = path_bagsdir):
-        path_bagsdirdirectory = os.path.join(proj_path, container, directory)
-        id_name = directory.split('-')[1].strip()
-        os.rename(path_bagsdirdirectory, os.path.join(path_bagsdir, id_name))
-        num_bags += 1
-        print('renamed {} into {}'.format(directory, id_name))
-    print('renamed {} bags'.format(num_bags))
-    
-#possible alternative to process_bags(), reverting the bags as a separate function
-def revert_bags():
-    print('----RERVERTING BAGS----')
-    project_log_hand = open(proj_log_file, 'r')
-    vars = project_log_hand.readlines()
-    project_log_hand.close()
-    container = vars[1].strip()
-    bags_dir = vars[2].strip()
-    num_bags = 0
-    error_log_handle = open(os.path.join(proj_path, 'validation_error_log.txt'), 'r')
-    error_log = error_log_handle.read()
-    error_log_handle.close()
-    error_log_str = ''
-    for line in error_log:
-        error_log_str = error_log_str + line
-    path_bagsdir = os.path.join(proj_path, container, bags_dir)
-    for directory in os.listdir(path = path_bagsdir):
-        path_bagsdirdirectory = os.path.join(proj_path, container, bags_dir, directory)
-        #skips any directories that raised errors during validation
-        if error_log_str.find(directory) != -1 :
-            continue
-        else:
-            print('attempting to revert bag: {}'.format(directory))
-            #converts the bags back into normal directories, removing bagit and manifest files
-            bdbag_api.revert_bag(path_bagsdirdirectory)
-            num_bags += 1
-    print('Reverted {} bags'.format(str(num_bags)))
-    
-#possible alternative to process_bags() in cases where both preservation and access assets are exported from Islandora
-#uses REGEX to identify a number of different file format extensions
-def process_bags_islandora():
-    print('----PROCESSING BAGS----')
-    project_log_hand = open(proj_log_file, 'r')
-    vars = project_log_hand.readlines()
-    project_log_hand.close()
-    container = vars[1].strip()
-    num_bags = 0
-    path_bagsdir = os.path.join(proj_path, container)
-    for directory in os.listdir(path = path_bagsdir):
-        path_bagsdirdirectory = os.path.join(proj_path, container, directory)
-        #skips any directories that raised errors during validation
-        print('processing: {}'.format(directory))
-        obj_file_name = ''
-        extension = ''
-        #removes unnecessary files generated by Islandora
-        unnecessary_files = ['foo.xml', 'foxml.xml', 'JP2.jp2', 'JPG.jpg', 'POLICY.xml', 'PREVIEW.jpg', 'RELS-EXT.rdf', 'RELS-INT.rdf', 'TN.jpg', 'HOCR.html', 'OCR.txt', 'PROXY_MP3.mp3', 'TIFF.tif']
-        for file in os.listdir(path = path_bagsdirdirectory):
-            if file in unnecessary_files:
-                os.remove(os.path.join(proj_path, container, directory, file))
-        for file in os.listdir(path = path_bagsdirdirectory):
-            if re.search('^OBJ', file):
-                obj_file_name = file
-                extension = obj_file_name.split('.')[1].strip()
-                path_objfilename = os.path.join(proj_path, container, directory, obj_file_name)
-                #use xml.etree to identify filename from MODS.xml
-                tree = ET.parse(os.path.join(path_bagsdirdirectory, 'DC.xml'))
-                identifier = tree.find('{http://purl.org/dc/elements/1.1/}identifier').text
-                identifier = identifier.replace(':','_')
-                #rename the OBJ file to original filename pulled from MODS.xml
-                os.rename(path_objfilename, os.path.join(path_bagsdirdirectory, identifier + '.' + extension))
-            elif re.search('^FULL_TEXT', file):
-                obj_file_name = file
-                extension = obj_file_name.split('.')[1].strip()
-                path_objfilename = os.path.join(proj_path, container, directory, obj_file_name)
-                #use xml.etree to identify filename from MODS.xml
-                tree = ET.parse(os.path.join(path_bagsdirdirectory, 'DC.xml'))
-                identifier = tree.find('{http://purl.org/dc/elements/1.1/}identifier').text
-                identifier = identifier.replace(':','_')
-                #rename the OBJ file to original filename pulled from MODS.xml
-                os.rename(path_objfilename, os.path.join(path_bagsdirdirectory, identifier + '.' + extension))
-            elif re.search('^MP4', file):
-                obj_file_name = file
-                extension = obj_file_name.split('.')[1].strip()
-                path_objfilename = os.path.join(proj_path, container, directory, obj_file_name)
-                #use xml.etree to identify filename from MODS.xml
-                tree = ET.parse(os.path.join(path_bagsdirdirectory, 'DC.xml'))
-                identifier = tree.find('{http://purl.org/dc/elements/1.1/}identifier').text
-                identifier = identifier.replace(':','_')
-                #rename the OBJ file to original filename pulled from MODS.xml
-                os.rename(path_objfilename, os.path.join(path_bagsdirdirectory, identifier + '.' + extension))
-        num_bags += 1
-    print('Processed {} bags'.format(str(num_bags)))
-    
-#an alternative to the seperate functions that merge access and representation copies
-#if bags contain both preservation and access copies, this function can structure the PAX representation folders in one function
-#this specific instance also assumes two different types of materials (textual and video) where the textual has two different
-#access copies and zero preservation representations
-def representation_preservation_access():
-    print('----CREATING REPRESENTATION_ACCESS FOLDERS----')
-    project_log_hand = open(proj_log_file, 'r')
-    vars = project_log_hand.readlines()
-    project_log_hand.close()
-    container = vars[1].strip()
-    folder_count = 0
-    file_count = 0
-    rep_acc = 'Representation_Access'
-    rep_acc1 = 'Representation_Access_1'
-    rep_acc2 = 'Representation_Access_2'
-    rep_pres = 'Representation_Preservation'
-    path_container = os.path.join(proj_path, container)
-    for directory in os.listdir(path = path_container):
-        path_directory = os.path.join(proj_path, container, directory)
-        file_list = []
-        for file in os.listdir(path = path_directory):
-            file_list.append(file)
-        testvartext = directory + '.txt'
-        testvarvideo = directory + '.mp4'
-        if testvartext in file_list:
-            path_diracc1 = os.path.join(proj_path, container, directory, rep_acc1)
-            os.mkdir(path_diracc1)
-            path_diracc1_subdir = os.path.join(proj_path, container, directory, rep_acc1, directory)
-            os.mkdir(path_diracc1_subdir)
-            path_diracc2 = os.path.join(proj_path, container, directory, rep_acc2)
-            os.mkdir(path_diracc2)
-            path_diracc2_subdir = os.path.join(proj_path, container, directory, rep_acc2, directory)
-            os.mkdir(path_diracc2_subdir)
-            for file in os.listdir(path = path_directory):
-                if file.endswith('pdf'):
-                    shutil.move(os.path.join(path_directory, file), os.path.join(path_diracc1_subdir, file))
-                    file_count += 1
-                elif file.endswith('txt'):
-                    shutil.move(os.path.join(path_directory, file), os.path.join(path_diracc2_subdir, file))
-                    file_count += 1
-            print('created {} and {}'.format(path_diracc1_subdir, path_diracc2_subdir))
-        elif testvarvideo in file_list:
-            path_diracc = os.path.join(proj_path, container, directory, rep_acc)
-            os.mkdir(path_diracc)
-            path_diracc_subdir = os.path.join(proj_path, container, directory, rep_acc, directory)
-            os.mkdir(path_diracc_subdir)
-            path_dirpres = os.path.join(proj_path, container, directory, rep_pres)
-            os.mkdir(path_dirpres)
-            path_dirpres_subdir = os.path.join(proj_path, container, directory, rep_pres, directory)
-            os.mkdir(path_dirpres_subdir)
-            for file in os.listdir(path = path_directory):
-                if file.endswith('mp4'):
-                    shutil.move(os.path.join(path_directory, file), os.path.join(path_diracc_subdir, file))
-                    file_count += 1
-                elif file.endswith('mov'):
-                    shutil.move(os.path.join(path_directory, file), os.path.join(path_dirpres_subdir, file))
-                    file_count += 1
-            print('created {} and {}'.format(path_diracc_subdir, path_dirpres_subdir))
-        folder_count += 1
-    print('Created {} Representation Access or Preservation directories and moved {} files'.format(folder_count, file_count))
-
-#------------------------------------------------------------------------------------------------------------------------------------------------------
-# ALTERNATIVE WORKFLOW FOR PREPARING ASSETS FOR PRESERVICA INGEST
-# Assumes that access assets are coming from Islandora
-# Assumes that metadata is coming from Islandora
-#------------------------------------------------------------------------------------------------------------------------------------------------------
 ## X Manual Process - COPY preservations masters directory into root of project folder
-## X create_container() - Reanme 'orig_dir' directory into container directory which will be dumped into AWS Bucket for OPEX incremental ingest
+## X create_container() - Rename 'orig_dir' directory into container directory which will be dumped into AWS Bucket for OPEX incremental ingest
 # create_container()
-## X Manual Process - COPY zipped bags over into created container directory
+## X folder_ds_files() - Transform single directory of preservation images into separate subdirectories full of images per asset
+# folder_ds_files()
+## X create_bags_dir() -  Create bags directory to stage exported bags for processing
+# create_bags_dir()
+## X Manual Process - COPY zipped bags over into created bags directory
 ## X extract_bags() - Extract/unzip the bags in the bags directory
 # extract_bags()
 ## X validate_bags() - Validate the unzipped bags to ensure no errors in transfer
 # validate_bags()
-## X revert_bags() - Reverts the bags into simple directories
-# revert_bags()
-## X rename_bags() - Renames the bag directories to remove the "Bag-" prefix
-# rename_bags()
-## X process_bags() - Removes unnecessary files in 'data' subdirectory
+## X create_id_ss() - Create a spreadsheet with the mapping between preservation file names, access file names, and bag ids
+# create_id_ss()
+## X Manual Process - Rectify the mismatches presented in the pres_acc_bag_ids spreadsheet
+## X representation_preservation() - Create 'Representation_Preservation' subdirectories in each asset folder, then move preservation assets into them
+# representation_preservation()
+## X process_bags() - Reverts the bags into simple directories and removes unnecessary files in 'data' subdirectory
 # process_bags()
-## X representation_preservation_access() - Create 'Representation_Access' subdirectories in each asset folder
-# representation_preservation_access()
-## X cleanup_metadata() - Removes excess XML headers from individual metadata files
-# cleanup_metadata()
+## X representation_access() - Create 'Representation_Access' subdirectories in each asset folder
+# representation_access()
+## X access_id_path() - Generate file containing MODS identifier and relative paths
+# access_id_path()
+## X merge_access_preservation() - Loop through dirs in container, move access copies and metadata into relevant folders
+# merge_access_preservation()
+## X cleanup_bags() - Delete the bags_dir folder and the access_ids.txt file once merge is complete
+# cleanup_bags()
 ## X stage_pax_content() - moves the Representation_Access and Representation_Preservation folders into a staging directory to enable zipping the PAX
 # stage_pax_content()
-## X create_pax() - Make a PAX zip archive out of the Representation_Access and Representation_Access
+## X create_pax() - Make a PAX zip archive out of the Representation_Access and Representation_Preservation
 # create_pax()
-## X pax_metadata() - Write the OPEX metadata for the individua assets contained in the PAX (including a checksum of the PAX archive)
+## X cleanup_metadata() - Removes excess XML headers from individual metadata files
+# cleanup_metadata()
+## X pax_metadata() - Write the OPEX metadata for the individua assets contained in the PAX
 # pax_metadata()
 ## X cleanup_directories() - Delete the xml files used to create the OPEX metadata and the directories used to create the PAX zip archive
 # cleanup_directories()
@@ -841,49 +638,3 @@ def representation_preservation_access():
 ## X write_opex_container_md() - Write the OPEX metadata for the entire container structure
 # write_opex_container_md()
 #------------------------------------------------------------------------------------------------------------------------------------------------------
-
-#------------------------------------------------------------------------------------------------------------------------------------------------------
-#an alternative to the default foldering script
-#this function takes all of the preservation master files that come from DS in one big directory and splits them up into subdirectories containing all the images for a
-#particular resource
-def folder_ds_files_alt1():
-    print('----CREATING FOLDER STRUCTURE FOR PRESERVATION MASTERS----')
-    project_log_hand = open(proj_log_file, 'r')
-    vars = project_log_hand.readlines()
-    project_log_hand.close()
-    container = vars[1].strip()
-    folder_name = ''
-    folder_count = 0
-    file_count = 0
-    id_list_hand = open('file_list.txt', 'r')
-    id_list = id_list_hand.readlines()
-    id_list_hand.close()
-    for id in id_list:
-        id = id.strip()
-        print(id)
-        id_comp = id.strip().split('-')
-        if len(id_comp) == 2:
-            os.mkdir(os.path.join(proj_path, container, id))
-            folder_count += 1
-            shutil.move(os.path.join(proj_path, container, id + '.tif'), os.path.join(proj_path, container, id, id + '.tif'))
-            file_count += 1
-        else:
-            file_loc = os.path.join(proj_path, container, id)
-            os.mkdir(file_loc)
-            folder_count += 1
-            id_prefix = id_comp[0]
-            id_start = int(id_comp[1])
-            id_end = int(id_comp[2])
-            id_list = []
-            counter = id_start
-            while counter <= id_end:
-                id_list.append(counter)
-                counter += 1
-            for id in id_list:
-                id = str(id)
-                file_name = id_prefix + '-' + id.zfill(3) + '.tif'
-                shutil.move(os.path.join(proj_path, container, file_name), os.path.join(file_loc, file_name ))
-                file_count += 1
-    print('Created and renamed {} subdirectories and moved {} files into them'.format(folder_count, file_count))
-
-#folder_ds_files_alt1()
